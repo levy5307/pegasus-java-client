@@ -2482,4 +2482,25 @@ public class TestBasic {
     Assert.assertTrue(valueStr.contains("v_98"));
     Assert.assertTrue(valueStr.contains("v_99"));
   }
+
+  @Test
+  public void testWarmup() throws PException {
+    PegasusClientInterface client = PegasusClientFactory.getSingletonClient();
+    PegasusTableInterface table = client.openTable("temp");
+
+    long total = 0, max = 0, min = Long.MAX_VALUE;
+    int count = 10;
+    for (int i = 0; i < count; i++) {
+      Long start_us = System.nanoTime() / 1000;
+      table.set("aaa".getBytes(), "bbb".getBytes(), "ccc".getBytes(), 0);
+      Long duration = System.nanoTime() / 1000 - start_us;
+      total += duration;
+      max = Math.max(max, duration);
+      min = Math.min(min, duration);
+      //System.out.printf("latency = %d us\n", duration);
+    }
+
+    System.out.printf("total = %d us, average = %d us, max = %d, min = %d\n", total, total / count, max, min);
+    PegasusClientFactory.closeSingletonClient();
+  }
 }

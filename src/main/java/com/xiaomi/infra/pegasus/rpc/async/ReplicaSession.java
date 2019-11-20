@@ -48,6 +48,8 @@ public class ReplicaSession {
         .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.SO_KEEPALIVE, true)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, socketTimeout)
+        .option(ChannelOption.SO_SNDBUF, 64*1024)
+        .option(ChannelOption.SO_RCVBUF, 64*1024)
         .handler(
             new ChannelInitializer<SocketChannel>() {
               @Override
