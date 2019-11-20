@@ -56,7 +56,9 @@ public class PegasusCli {
     PegasusClientInterface client = PegasusClientFactory.getSingletonClient(configPath);
     PegasusTableInterface table = client.openTable(appName);
 
-    long total = 0, max = 0, min = Long.MAX_VALUE;
+    long total = 0;
+    long max = 0;
+    long min = Long.MAX_VALUE;
     for (int i = 0; i < count; i++) {
       Long start_us = System.nanoTime() / 1000;
       table.set("aaa".getBytes(), "bbb".getBytes(), "ccc".getBytes(), 0);
