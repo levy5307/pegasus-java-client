@@ -2497,10 +2497,11 @@ public class TestBasic {
       total += duration;
       max = Math.max(max, duration);
       min = Math.min(min, duration);
-      //System.out.printf("latency = %d us\n", duration);
+      // System.out.printf("latency = %d us\n", duration);
     }
 
-    System.out.printf("total = %d us, average = %d us, max = %d, min = %d\n", total, total / count, max, min);
+    System.out.printf(
+        "total = %d us, average = %d us, max = %d, min = %d\n", total, total / count, max, min);
     PegasusClientFactory.closeSingletonClient();
   }
 }
