@@ -52,7 +52,27 @@ public class PegasusCli {
     System.out.println();
   }
 
-  public static void main(String args[]) {
+  public static void testWarmup(String configPath, String appName, int count) throws PException {
+    PegasusClientInterface client = PegasusClientFactory.getSingletonClient(configPath);
+    PegasusTableInterface table = client.openTable(appName);
+
+    long total = 0, max = 0, min = Long.MAX_VALUE;
+    for (int i = 0; i < count; i++) {
+      Long start_us = System.nanoTime() / 1000;
+      table.set("aaa".getBytes(), "bbb".getBytes(), "ccc".getBytes(), 0);
+      Long duration = System.nanoTime() / 1000 - start_us;
+      total += duration;
+      max = Math.max(max, duration);
+      min = Math.min(min, duration);
+      // System.out.printf("latency = %d us\n", duration);
+    }
+
+    System.out.printf(
+        "total = %d us, average = %d us, max = %d, min = %d\n", total, total / count, max, min);
+    PegasusClientFactory.closeSingletonClient();
+  }
+
+  public static void main(String args[]) throws PException {
     if (args.length < 3) {
       System.out.println("ERROR: invalid parameter count");
       usage();
@@ -186,6 +206,8 @@ public class PegasusCli {
       if (args.length > 4) {
         maxCount = Integer.parseInt(args[4]);
       }
+    } else if (opName.equals("test_warmup")) {
+      testWarmup(configPath, appName, Integer.valueOf(args[0]));
     } else {
       System.out.println("ERROR: invalid op-name: " + opName);
       usage();
