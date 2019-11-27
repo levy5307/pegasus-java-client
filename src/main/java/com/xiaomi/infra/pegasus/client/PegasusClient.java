@@ -53,6 +53,9 @@ public class PegasusClient implements PegasusClientInterface {
             throw new PException(e);
           }
           tableMap.put(tableName, table);
+
+          // send fake rpc
+          table.get("".getBytes(), "".getBytes(), 1000);
         }
       }
     }

@@ -2489,7 +2489,7 @@ public class TestBasic {
     PegasusTableInterface table = client.openTable("temp");
 
     long total = 0, max = 0, min = Long.MAX_VALUE;
-    int count = 10;
+    int count = 1000;
     for (int i = 0; i < count; i++) {
       Long start_us = System.nanoTime() / 1000;
       table.set("aaa".getBytes(), "bbb".getBytes(), "ccc".getBytes(), 0);
@@ -2497,7 +2497,7 @@ public class TestBasic {
       total += duration;
       max = Math.max(max, duration);
       min = Math.min(min, duration);
-      // System.out.printf("latency = %d us\n", duration);
+      System.out.printf("latency = %d us\n", duration);
     }
 
     System.out.printf(

@@ -61,12 +61,12 @@ public class PegasusCli {
     long min = Long.MAX_VALUE;
     for (int i = 0; i < count; i++) {
       Long start_us = System.nanoTime() / 1000;
-      table.set("aaa".getBytes(), "bbb".getBytes(), "ccc".getBytes(), 0);
+      byte[] res = table.get("aaa".getBytes(), "bbb".getBytes(), 100);
       Long duration = System.nanoTime() / 1000 - start_us;
       total += duration;
       max = Math.max(max, duration);
       min = Math.min(min, duration);
-      // System.out.printf("latency = %d us\n", duration);
+      System.out.printf("latency = %d us, %s\n", duration, new String(res));
     }
 
     System.out.printf(
@@ -210,6 +210,7 @@ public class PegasusCli {
       }
     } else if (opName.equals("test_warmup")) {
       testWarmup(configPath, appName, Integer.valueOf(args[0]));
+      return;
     } else {
       System.out.println("ERROR: invalid op-name: " + opName);
       usage();
