@@ -163,19 +163,16 @@ public class ClusterManager extends Cluster {
             ss = replicaSessions.get(address);
             if (ss != null)
                 return ss;
-            if (openAuth()) {
-                logger.info("Create a replicaSession {} which is open-auth", address);
-                ss = new ReplicaSession(
-                        address,
-                        replicaGroup,
-                        Cluster.SOCK_TIMEOUT,
-                        true,
-                        subject,
-                        serviceName,
-                        serviceFqdn);
-            } else {
-                ss = new ReplicaSession(address, replicaGroup, Cluster.SOCK_TIMEOUT);
-            }
+
+            logger.info("Create a replicaSession {}", address);
+            ss = new ReplicaSession(
+                    address,
+                    replicaGroup,
+                    Cluster.SOCK_TIMEOUT,
+                    openAuth(),
+                    subject,
+                    serviceName,
+                    serviceFqdn);
             replicaSessions.put(address, ss);
             return ss;
         }

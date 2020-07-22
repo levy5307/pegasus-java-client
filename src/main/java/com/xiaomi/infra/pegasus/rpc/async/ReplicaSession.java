@@ -53,18 +53,6 @@ public class ReplicaSession {
         DISCONNECTED
     }
 
-    public ReplicaSession(rpc_address address, EventLoopGroup rpcGroup, int socketTimeout) {
-        this(address, rpcGroup, socketTimeout, false, null, null, null);
-    }
-
-    // You can specify a message response filter with constructor or with "setMessageResponseFilter" function.
-    // the mainly usage of filter is test, in which you can control whether to abaondon a response
-    // and how to abandon it, so as to emulate some network failure cases
-    public ReplicaSession(rpc_address address, EventLoopGroup rpcGroup, int socketTimeout, MessageResponseFilter filter) {
-        this(address, rpcGroup, socketTimeout, false, null, null, null);
-        this.filter = filter;
-    }
-
     public ReplicaSession(rpc_address address, EventLoopGroup rpcGroup, int socketTimeout, boolean openAuth, Subject subject, String serviceName, String serviceFqdn) {
         this.address = address;
         this.rpcGroup = rpcGroup;
@@ -86,22 +74,13 @@ public class ReplicaSession {
                 });
 
         this.openAuth = openAuth;
-        if (openAuth) {
-            this.subject = subject;
-            this.serviceName = serviceName;
-            this.serviceFqdn = serviceFqdn;
-            // QOP(Quality of Protection) mismatch between client and server may cause the error - No common protection layer between client and server
-            props.put(Sasl.QOP, "auth");
-        } else {
-            this.subject = new Subject();
-        }
-        
-        this.firstRecentTimedOutMs = new AtomicLong(0);
-    }
+        this.subject = subject;
+        this.serviceName = serviceName;
+        this.serviceFqdn = serviceFqdn;
+        // QOP(Quality of Protection) mismatch between client and server may cause the error - No common protection layer between client and server
+        this.props.put(Sasl.QOP, "auth");
 
-    public ReplicaSession(rpc_address address, EventLoopGroup rpcGroup, int socketTimeout, boolean openAuth, Subject subject, String serviceName, String serviceFqdn, MessageResponseFilter filter) {
-        this(address, rpcGroup, socketTimeout, openAuth, subject, serviceName, serviceFqdn);
-        this.filter = filter;
+        this.firstRecentTimedOutMs = new AtomicLong(0);
     }
 
     public void setMessageResponseFilter(MessageResponseFilter filter) {
