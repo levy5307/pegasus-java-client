@@ -381,7 +381,7 @@ public class ReplicaSession {
         entry.op = new negotiate_operator(msg);
         entry.callback = new SaslRecvHandler((negotiate_operator) entry.op);
         entry.timeoutTask = addTimer(entry.sequenceId, 1000);
-        pendingResponse.put(new Integer(entry.sequenceId), entry);
+        pendingResponse.put(entry.sequenceId, entry);
 
         write(entry, fields);
     }
