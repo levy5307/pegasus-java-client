@@ -43,7 +43,13 @@ enum negotiation_status
     SASL_AUTH_FAIL
 }
 
-struct negotiation_message
+struct negotiation_request
+{
+    1: negotiation_status status;
+    2: base.blob msg;
+}
+
+struct negotiation_response
 {
     1: negotiation_status status;
     2: base.blob msg;
@@ -51,5 +57,5 @@ struct negotiation_message
 
 service security
 {
-    negotiation_message negotiate(1:negotiation_message nego_msg);
+    negotiation_response negotiate(1:negotiation_request request);
 }

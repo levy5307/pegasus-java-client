@@ -3,7 +3,8 @@
 // can be found in the LICENSE file in the root directory of this source tree.
 package com.xiaomi.infra.pegasus.operator;
 
-import com.xiaomi.infra.pegasus.apps.negotiation_message;
+import com.xiaomi.infra.pegasus.apps.negotiation_request;
+import com.xiaomi.infra.pegasus.apps.negotiation_response;
 import com.xiaomi.infra.pegasus.apps.security;
 import com.xiaomi.infra.pegasus.base.gpid;
 import com.xiaomi.infra.pegasus.thrift.TException;
@@ -11,7 +12,7 @@ import com.xiaomi.infra.pegasus.thrift.protocol.TMessage;
 import com.xiaomi.infra.pegasus.thrift.protocol.TMessageType;
 
 public class negotiate_operator extends client_operator {
-    public negotiate_operator(negotiation_message request) {
+    public negotiate_operator(negotiation_request request) {
         super(new gpid(), "");
         this.request = request;
     }
@@ -40,10 +41,10 @@ public class negotiate_operator extends client_operator {
                     "get failed: unknown result");
     }
 
-    public negotiation_message get_response() {
+    public negotiation_response get_response() {
         return resp;
     }
 
-    private negotiation_message request;
-    private negotiation_message resp;
+    private negotiation_request request;
+    private negotiation_response resp;
 }

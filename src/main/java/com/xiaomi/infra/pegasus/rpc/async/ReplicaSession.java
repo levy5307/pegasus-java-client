@@ -3,7 +3,8 @@
 // can be found in the LICENSE file in the root directory of this source tree.
 package com.xiaomi.infra.pegasus.rpc.async;
 
-import com.xiaomi.infra.pegasus.apps.negotiation_message;
+import com.xiaomi.infra.pegasus.apps.negotiation_request;
+import com.xiaomi.infra.pegasus.apps.negotiation_response;
 import com.xiaomi.infra.pegasus.apps.negotiation_status;
 import com.xiaomi.infra.pegasus.base.blob;
 import com.xiaomi.infra.pegasus.base.error_code.error_types;
@@ -21,7 +22,6 @@ import org.slf4j.Logger;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.LoginContext;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslClient;
 import java.net.UnknownHostException;
@@ -349,12 +349,12 @@ public class ReplicaSession {
 
     private void startNegotiation() {
         logger.info("{}: start auth negotiation", name());
-        negotiation_message msg = new negotiation_message();
+        negotiation_request msg = new negotiation_request();
         msg.status = negotiation_status.SASL_LIST_MECHANISMS;
         sendNegoMsg(msg);
     }
 
-    private void sendNegoMsg(negotiation_message msg) {
+    private void sendNegoMsg(negotiation_request msg) {
         final RequestEntry entry = new ReplicaSession.RequestEntry();
         entry.sequenceId = seqId.getAndIncrement();
         entry.op = new negotiate_operator(msg);
@@ -391,14 +391,14 @@ public class ReplicaSession {
         }
 
         private void handleResp() throws Exception {
-            final negotiation_message resp = op.get_response();
+            final negotiation_response resp = op.get_response();
 
             if (resp == null) {
                 logger.error("SaslRecvHandler received a null response, abandon it");
                 return;
             }
 
-            final negotiation_message msg = new negotiation_message();
+            final negotiation_request request = new negotiation_request();
             switch (resp.status) {
                 case INVALID:
                 case SASL_AUTH_FAIL:
@@ -414,8 +414,8 @@ public class ReplicaSession {
                                             Sasl.createSaslClient(
                                                     mechanisms, null, serviceName, serviceFqdn, props, cbh);
                                     logger.info("Select mechanism: {}", saslClient.getMechanismName());
-                                    msg.status = negotiation_status.SASL_SELECT_MECHANISMS;
-                                    msg.msg = new blob(saslClient.getMechanismName().getBytes());
+                                    request.status = negotiation_status.SASL_SELECT_MECHANISMS;
+                                    request.msg = new blob(saslClient.getMechanismName().getBytes());
                                     return null;
                                 }
                             });
@@ -425,11 +425,11 @@ public class ReplicaSession {
                             subject,
                             new Action() {
                                 public Object run() throws Exception {
-                                    msg.status = negotiation_status.SASL_INITIATE;
+                                    request.status = negotiation_status.SASL_INITIATE;
                                     if (saslClient.hasInitialResponse()) {
-                                        msg.msg = new blob(saslClient.evaluateChallenge(new byte[0]));
+                                        request.msg = new blob(saslClient.evaluateChallenge(new byte[0]));
                                     } else {
-                                        msg.msg = new blob(new byte[0]);
+                                        request.msg = new blob(new byte[0]);
                                     }
                                     return null;
                                 }
@@ -441,8 +441,8 @@ public class ReplicaSession {
                             subject,
                             new Action() {
                                 public Object run() throws Exception {
-                                    msg.status = negotiation_status.SASL_RESPONSE;
-                                    msg.msg = new blob(saslClient.evaluateChallenge(resp.msg.data));
+                                    request.status = negotiation_status.SASL_RESPONSE;
+                                    request.msg = new blob(saslClient.evaluateChallenge(resp.msg.data));
                                     return null;
                                 }
                             });
@@ -454,7 +454,7 @@ public class ReplicaSession {
                     throw new Exception("Received an unknown response, status " + resp.status);
             }
 
-            sendNegoMsg(msg);
+            sendNegoMsg(request);
         }
     }
 
