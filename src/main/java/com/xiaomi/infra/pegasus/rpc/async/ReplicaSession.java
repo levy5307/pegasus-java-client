@@ -157,6 +157,41 @@ public class ReplicaSession {
     return address;
   }
 
+  public void setNegotiationSucceed(boolean negotiationSucceed) {
+    synchronized (pendingSend) {
+      this.negotiationSucceed = negotiationSucceed;
+
+      while (!pendingSend.isEmpty()) {
+        RequestEntry e = pendingSend.poll();
+        if (pendingResponse.get(e.sequenceId) != null) {
+          write(e, fields);
+        } else {
+          logger.info("{}: {} is removed from pending, perhaps timeout", name(), e.sequenceId);
+        }
+      }
+    }
+  }
+
+  // return value:
+  //   true  - pend succeed
+  //   false - pend failed
+  public boolean tryPendRequest(RequestEntry entry) {
+    // double check. the first one don't lock the _lock.
+    // Because negotiationSucceed only transfered from false to true.
+    // So if it is true now, it will not change in the later.
+    // But if it is false now, maybe it will change soon. So we should use lock to protect it.
+    if (!this.negotiationSucceed) {
+      synchronized (pendingSend) {
+        if (!this.negotiationSucceed) {
+          pendingSend.offer(entry);
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   @Override
   public String toString() {
     return address.toString();
@@ -224,6 +259,8 @@ public class ReplicaSession {
     VolatileFields newCache = new VolatileFields();
     newCache.state = ConnState.CONNECTED;
     newCache.nettyChannel = activeChannel;
+
+    ReplicaSessionHookManager.instance().onConnected(this);
 
     synchronized (pendingSend) {
       if (fields.state != ConnState.CONNECTING) {
@@ -331,6 +368,10 @@ public class ReplicaSession {
   }
 
   private void write(final RequestEntry entry, VolatileFields cache) {
+    if (!ReplicaSessionHookManager.instance().onSendMessage(this, entry)) {
+      return;
+    }
+
     cache
         .nettyChannel
         .writeAndFlush(entry)
@@ -436,6 +477,7 @@ public class ReplicaSession {
   private EventLoopGroup rpcGroup;
   private boolean enableAuth;
   private Negotiation negotiation;
+  private boolean negotiationSucceed;
 
   // Session will be actively closed if all the rpcs across `sessionResetTimeWindowMs`
   // are timed out, in that case we suspect that the server is unavailable.
