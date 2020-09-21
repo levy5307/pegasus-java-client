@@ -1,5 +1,6 @@
 package com.xiaomi.infra.pegasus.rpc.async;
 
+import com.xiaomi.infra.pegasus.apps.negotiation_request;
 import com.xiaomi.infra.pegasus.apps.negotiation_response;
 import com.xiaomi.infra.pegasus.apps.negotiation_status;
 import com.xiaomi.infra.pegasus.base.blob;
@@ -23,7 +24,10 @@ public class Negotiation {
   }
 
   public void send(negotiation_status status, blob msg) {
-    // TODO: send negotiation message, using RecvHandler to handle the corresponding response.
+    negotiation_request request = new negotiation_request();
+    request.status = status;
+    request.msg = msg;
+    // session.asyncSend();
   }
 
   private class RecvHandler implements Runnable {

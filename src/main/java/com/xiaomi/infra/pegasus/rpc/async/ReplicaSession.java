@@ -39,10 +39,9 @@ public class ReplicaSession {
   }
 
   public ReplicaSession(
-      rpc_address address, EventLoopGroup rpcGroup, int socketTimeout, boolean enableAuth) {
+      rpc_address address, EventLoopGroup rpcGroup, int socketTimeout) {
     this.address = address;
     this.rpcGroup = rpcGroup;
-    this.enableAuth = enableAuth;
 
     final ReplicaSession this_ = this;
     boot = new Bootstrap();
@@ -74,7 +73,7 @@ public class ReplicaSession {
       EventLoopGroup rpcGroup,
       int socketTimeout,
       MessageResponseFilter filter) {
-    this(address, rpcGroup, socketTimeout, false);
+    this(address, rpcGroup, socketTimeout);
     this.filter = filter;
   }
 
@@ -157,12 +156,11 @@ public class ReplicaSession {
     return address;
   }
 
-  public void setNegotiationSucceed(boolean negotiationSucceed) {
-    synchronized (pendingSend) {
-      this.negotiationSucceed = negotiationSucceed;
-
-      while (!pendingSend.isEmpty()) {
-        RequestEntry e = pendingSend.poll();
+  public void setNegotiationSucceed() {
+    synchronized (negotiationPendingSend) {
+      this.negotiationSucceed = true;
+      while (!negotiationPendingSend.isEmpty()) {
+        RequestEntry e = negotiationPendingSend.poll();
         if (pendingResponse.get(e.sequenceId) != null) {
           write(e, fields);
         } else {
@@ -176,7 +174,7 @@ public class ReplicaSession {
   //   true  - pend succeed
   //   false - pend failed
   public boolean tryPendRequest(RequestEntry entry) {
-    // double check. the first one don't lock the _lock.
+    // double check. the first one doesn't lock the lock.
     // Because negotiationSucceed only transfered from false to true.
     // So if it is true now, it will not change in the later.
     // But if it is false now, maybe it will change soon. So we should use lock to protect it.
@@ -241,17 +239,6 @@ public class ReplicaSession {
       logger.error("invalid address: {}", address.toString());
       assert false;
       return null; // unreachable
-    }
-  }
-
-  private void startNegotiation(Channel activeChannel) {
-    logger.info("{}: mark session state negotiation");
-    if (enableAuth) {
-      negotiation = new Negotiation(this);
-      negotiation.start();
-    } else {
-      logger.info("{}: mark session state connected");
-      markSessionConnected(activeChannel);
     }
   }
 
@@ -422,7 +409,7 @@ public class ReplicaSession {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
       logger.info("Channel {} for session {} is active", ctx.channel().toString(), name());
-      startNegotiation(ctx.channel());
+      markSessionConnected(ctx.channel());
     }
 
     @Override
@@ -475,9 +462,8 @@ public class ReplicaSession {
   private final rpc_address address;
   private Bootstrap boot;
   private EventLoopGroup rpcGroup;
-  private boolean enableAuth;
-  private Negotiation negotiation;
   private boolean negotiationSucceed;
+  final Queue<RequestEntry> negotiationPendingSend = new LinkedList<>();
 
   // Session will be actively closed if all the rpcs across `sessionResetTimeWindowMs`
   // are timed out, in that case we suspect that the server is unavailable.
