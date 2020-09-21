@@ -179,9 +179,9 @@ public class ReplicaSession {
     // So if it is true now, it will not change in the later.
     // But if it is false now, maybe it will change soon. So we should use lock to protect it.
     if (!this.negotiationSucceed) {
-      synchronized (pendingSend) {
+      synchronized (negotiationPendingSend) {
         if (!this.negotiationSucceed) {
-          pendingSend.offer(entry);
+          negotiationPendingSend.offer(entry);
           return true;
         }
       }
