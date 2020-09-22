@@ -89,8 +89,7 @@ public class ClusterManager extends Cluster {
           new ReplicaSession(
               address,
               replicaGroup,
-              max(operationTimeout, ClientOptions.MIN_SOCK_CONNECT_TIMEOUT),
-              enableAuth);
+              max(operationTimeout, ClientOptions.MIN_SOCK_CONNECT_TIMEOUT));
       replicaSessions.put(address, ss);
       return ss;
     }
