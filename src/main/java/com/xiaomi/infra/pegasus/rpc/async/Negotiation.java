@@ -20,14 +20,13 @@ public class Negotiation {
 
   public void start() {
     status = negotiation_status.SASL_LIST_MECHANISMS;
-    send(status, new blob(new byte[0]));
+    negotiation_request request = new negotiation_request(status, new blob(new byte[0]));
+    send(request);
   }
 
-  public void send(negotiation_status status, blob msg) {
-    negotiation_request request = new negotiation_request();
-    request.status = status;
-    request.msg = msg;
-    // session.asyncSend();
+  public void send(negotiation_request request) {
+    negotiation_operator operator = new negotiation_operator(request);
+    session.asyncSend(operator, new RecvHandler(operator), 3000, false);
   }
 
   private class RecvHandler implements Runnable {
