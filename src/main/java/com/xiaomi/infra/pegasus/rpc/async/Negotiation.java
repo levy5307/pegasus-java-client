@@ -1,5 +1,6 @@
 package com.xiaomi.infra.pegasus.rpc.async;
 
+import com.xiaomi.infra.pegasus.apps.negotiation_request;
 import com.xiaomi.infra.pegasus.apps.negotiation_response;
 import com.xiaomi.infra.pegasus.apps.negotiation_status;
 import com.xiaomi.infra.pegasus.base.blob;
@@ -13,6 +14,8 @@ import org.slf4j.Logger;
 
 public class Negotiation {
   private static final Logger logger = org.slf4j.LoggerFactory.getLogger(Negotiation.class);
+  private static final int rpcTimeout = 5000;
+
   private negotiation_status status;
   private ReplicaSession session;
   private String serviceName; // used for SASL authentication
@@ -31,11 +34,13 @@ public class Negotiation {
 
   public void start() {
     status = negotiation_status.SASL_LIST_MECHANISMS;
-    send(status, new blob(new byte[0]));
+    negotiation_request request = new negotiation_request(status, new blob(new byte[0]));
+    send(request);
   }
 
-  public void send(negotiation_status status, blob msg) {
-    // TODO: send negotiation message, using RecvHandler to handle the corresponding response.
+  private void send(negotiation_request request) {
+    negotiation_operator operator = new negotiation_operator(request);
+    session.asyncSend(operator, new RecvHandler(operator), rpcTimeout, false);
   }
 
   private class RecvHandler implements Runnable {
@@ -63,6 +68,7 @@ public class Negotiation {
         throw new Exception("RecvHandler received a null response, abandon it");
       }
 
+      negotiation_request request = new negotiation_request();
       switch (resp.status) {
         case SASL_LIST_MECHANISMS_RESP:
         case SASL_SELECT_MECHANISMS_RESP:
@@ -72,6 +78,8 @@ public class Negotiation {
         default:
           throw new Exception("Received an unexpected response, status " + resp.status);
       }
+
+      send(request);
     }
   }
 
