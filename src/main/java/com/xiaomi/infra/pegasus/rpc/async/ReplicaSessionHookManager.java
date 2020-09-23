@@ -20,4 +20,12 @@ public class ReplicaSessionHookManager {
       hook.onConnected(session);
     }
   }
+
+  public boolean onSendMessage(ReplicaSession session, final ReplicaSession.RequestEntry entry) {
+    boolean ret = true;
+    for (ReplicaSessionHook hook : hooks) {
+      ret &= hook.onSendMessage(session, entry);
+    }
+    return ret;
+  }
 }

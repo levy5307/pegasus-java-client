@@ -1,6 +1,7 @@
 package com.xiaomi.infra.pegasus.rpc.async;
 
 import com.sun.security.auth.callback.TextCallbackHandler;
+import com.xiaomi.infra.pegasus.operator.negotiation_operator;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
@@ -42,5 +43,14 @@ public class SecurityReplicaSessionHook implements ReplicaSessionHook {
   public void onConnected(ReplicaSession session) {
     Negotiation negotiation = new Negotiation(session, subject, serviceName, serviceFqdn);
     negotiation.start();
+  }
+
+  public boolean onSendMessage(ReplicaSession session, final ReplicaSession.RequestEntry entry) {
+    // tryPendRequest returns false means that the negotiation is succeed now
+    return isNegotiationRequest(entry) || !session.tryPendRequest(entry);
+  }
+
+  private boolean isNegotiationRequest(final ReplicaSession.RequestEntry entry) {
+    return entry.op.getClass().equals(negotiation_operator.class);
   }
 }
