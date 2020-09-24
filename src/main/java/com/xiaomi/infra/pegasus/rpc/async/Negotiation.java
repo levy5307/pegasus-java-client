@@ -106,7 +106,6 @@ public class Negotiation {
     String[] matchMechansim = new String[1];
     matchMechansim[0] = getMatchMechanism(new String(response.msg.data));
 
-    final negotiation_request request = new negotiation_request();
     Subject.doAs(
         subject,
         new Action() {
@@ -114,11 +113,13 @@ public class Negotiation {
             saslClient =
                 Sasl.createSaslClient(matchMechansim, null, serviceName, serviceFqdn, props, null);
             logger.info("Select mechanism: {}", saslClient.getMechanismName());
-            status = request.status = negotiation_status.SASL_SELECT_MECHANISMS;
-            request.msg = new blob(saslClient.getMechanismName().getBytes());
             return null;
           }
         });
+
+    final negotiation_request request = new negotiation_request();
+    status = request.status = negotiation_status.SASL_SELECT_MECHANISMS;
+    request.msg = new blob(saslClient.getMechanismName().getBytes());
     send(request);
   }
 
