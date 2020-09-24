@@ -13,7 +13,7 @@ public class NegotiationTest {
     Negotiation negotiation = new Negotiation(null, null, "", "");
     Negotiation mockNegotiation = Mockito.spy(negotiation);
 
-    Mockito.doNothing().when(mockNegotiation).send(any());
+    Mockito.doNothing().when(mockNegotiation).send(any(), any());
     mockNegotiation.start();
     Assert.assertEquals(mockNegotiation.get_status(), SASL_LIST_MECHANISMS);
   }
