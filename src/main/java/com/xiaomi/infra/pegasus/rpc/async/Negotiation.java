@@ -91,66 +91,65 @@ public class Negotiation {
           throw new Exception("Received an unexpected response, status " + resp.status);
       }
     }
+  }
 
-    void on_recv_mechanisms(negotiation_response response) throws Exception {
-      checkStatus(response.status, negotiation_status.SASL_LIST_MECHANISMS_RESP);
+  void on_recv_mechanisms(negotiation_response response) throws Exception {
+    checkStatus(response.status, negotiation_status.SASL_LIST_MECHANISMS_RESP);
 
-      // get match mechanism and init sasl wrapper
-      String[] matchMechanism = new String[1];
-      matchMechanism[0] = getMatchMechanism(new String(response.msg.data));
-      saslWrapper.init(matchMechanism);
+    // get match mechanism and init sasl wrapper
+    String[] matchMechanism = new String[1];
+    matchMechanism[0] = getMatchMechanism(new String(response.msg.data));
+    blob msg = new blob(saslWrapper.init(matchMechanism));
 
-      status = negotiation_status.SASL_SELECT_MECHANISMS;
-      blob msg = new blob(saslWrapper.getMechanismName().getBytes());
+    status = negotiation_status.SASL_SELECT_MECHANISMS;
+    send(status, msg);
+  }
+
+  void on_mechanism_selected(negotiation_response response) throws Exception {
+    checkStatus(response.status, negotiation_status.SASL_SELECT_MECHANISMS_RESP);
+
+    status = negotiation_status.SASL_INITIATE;
+    blob msg = saslWrapper.getInitialResponse();
+    send(status, msg);
+  }
+
+  void on_challenge(negotiation_response response) throws Exception {
+    if (response.status == negotiation_status.SASL_CHALLENGE) {
+      blob msg = saslWrapper.evaluateChallenge(response.msg.data);
+      status = negotiation_status.SASL_CHALLENGE_RESP;
       send(status, msg);
+      return;
     }
 
-    void on_mechanism_selected(negotiation_response response) throws Exception {
-      checkStatus(response.status, negotiation_status.SASL_SELECT_MECHANISMS_RESP);
-
-      status = negotiation_status.SASL_INITIATE;
-      blob msg = saslWrapper.getInitialResponse();
-      send(status, msg);
+    if (response.status == negotiation_status.SASL_SUCC) {
+      session.setNegotiationSucceed();
+      return;
     }
 
-    void on_challenge(negotiation_response response) throws Exception {
-      if (response.status == negotiation_status.SASL_CHALLENGE) {
-        blob msg = saslWrapper.evaluateChallenge(response.msg.data);
-        status = negotiation_status.SASL_CHALLENGE_RESP;
-        send(status, msg);
-        return;
-      }
+    throw new Exception("receive wrong negotiation msg type" + response.status.toString());
+  }
 
-      if (response.status == negotiation_status.SASL_SUCC) {
-        session.setNegotiationSucceed();
-        return;
+  String getMatchMechanism(String respString) {
+    String matchMechanism = new String();
+    String[] serverSupportMechanisms = respString.split(",");
+    for (String serverSupportMechanism : serverSupportMechanisms) {
+      if (expectedMechanisms.contains(serverSupportMechanism)) {
+        matchMechanism = serverSupportMechanism;
+        break;
       }
-
-      throw new Exception("receive wrong negotiation msg type" + response.status.toString());
     }
 
-    String getMatchMechanism(String respString) {
-      String matchMechanism = new String();
-      String[] serverSupportMechanisms = respString.split(",");
-      for (String serverSupportMechanism : serverSupportMechanisms) {
-        if (expectedMechanisms.contains(serverSupportMechanism)) {
-          matchMechanism = serverSupportMechanism;
-          break;
-        }
-      }
+    return matchMechanism;
+  }
 
-      return matchMechanism;
-    }
-
-    void checkStatus(negotiation_status status, negotiation_status expected_status)
-        throws Exception {
-      if (status != expected_status) {
-        throw new Exception("status is " + status + " while expect " + expected_status);
-      }
+  void checkStatus(negotiation_status status, negotiation_status expected_status)
+          throws Exception {
+    if (status != expected_status) {
+      throw new Exception("status is " + status + " while expect " + expected_status);
     }
   }
 
-  public negotiation_status get_status() {
+  public negotiation_status getStatus() {
     return status;
   }
 }

@@ -15,6 +15,6 @@ public class NegotiationTest {
 
     Mockito.doNothing().when(mockNegotiation).send(any(), any());
     mockNegotiation.start();
-    Assert.assertEquals(mockNegotiation.get_status(), SASL_LIST_MECHANISMS);
+    Assert.assertEquals(mockNegotiation.getStatus(), SASL_LIST_MECHANISMS);
   }
 }
