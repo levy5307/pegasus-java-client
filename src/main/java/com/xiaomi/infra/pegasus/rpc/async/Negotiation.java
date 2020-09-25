@@ -142,8 +142,7 @@ public class Negotiation {
     return matchMechanism;
   }
 
-  void checkStatus(negotiation_status status, negotiation_status expected_status)
-          throws Exception {
+  void checkStatus(negotiation_status status, negotiation_status expected_status) throws Exception {
     if (status != expected_status) {
       throw new Exception("status is " + status + " while expect " + expected_status);
     }

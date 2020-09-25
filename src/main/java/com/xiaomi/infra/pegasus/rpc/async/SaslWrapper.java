@@ -26,14 +26,14 @@ public class SaslWrapper {
   }
 
   public byte[] init(String[] mechanims) throws PrivilegedActionException {
-   return Subject.doAs(
-            subject,
-            (PrivilegedExceptionAction<byte[]>)
-                () -> {
-                  saslClient =
-                      Sasl.createSaslClient(mechanims, null, serviceName, serviceFQDN, props, null);
-                  return saslClient.getMechanismName().getBytes();
-                });
+    return Subject.doAs(
+        subject,
+        (PrivilegedExceptionAction<byte[]>)
+            () -> {
+              saslClient =
+                  Sasl.createSaslClient(mechanims, null, serviceName, serviceFQDN, props, null);
+              return saslClient.getMechanismName().getBytes();
+            });
   }
 
   public blob getInitialResponse() throws PrivilegedActionException {

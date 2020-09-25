@@ -56,9 +56,7 @@ public class ClusterManager extends Cluster {
     metaGroup = getEventLoopGroupInstance(1);
     tableGroup = getEventLoopGroupInstance(1);
     if (opts.isEnableAuth()) {
-      ReplicaSessionHook hook =
-          new SecurityReplicaSessionHook(
-              opts.getJaasConf(), opts.getServiceName(), opts.getServiceFQDN());
+      ReplicaSessionHook hook = new SecurityReplicaSessionHook(opts);
       ReplicaSessionHookManager.instance().addHook(hook);
     }
 

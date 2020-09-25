@@ -1,8 +1,13 @@
 package com.xiaomi.infra.pegasus.rpc.async;
 
 import com.sun.security.auth.callback.TextCallbackHandler;
+import com.xiaomi.infra.pegasus.client.ClientOptions;
 import com.xiaomi.infra.pegasus.operator.negotiation_operator;
+import java.util.HashMap;
+import java.util.Map;
 import javax.security.auth.Subject;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import org.slf4j.Logger;
@@ -10,22 +15,20 @@ import org.slf4j.Logger;
 public class SecurityReplicaSessionHook implements ReplicaSessionHook {
   private static final Logger logger =
       org.slf4j.LoggerFactory.getLogger(SecurityReplicaSessionHook.class);
-  private static final String JAAS_CONFIG_SYSTEM_PROPERTY = "java.security.auth.login.config";
 
-  private String jaasConf;
   private String serviceName;
   private String serviceFqdn;
   private Subject subject;
   private LoginContext loginContext;
 
-  public SecurityReplicaSessionHook(String jaasConf, String serviceName, String serviceFqdn) {
-    this.serviceName = serviceName;
-    this.serviceFqdn = serviceFqdn;
-    this.jaasConf = jaasConf;
-    System.setProperty(JAAS_CONFIG_SYSTEM_PROPERTY, this.jaasConf);
+  public SecurityReplicaSessionHook(ClientOptions opts) {
+    this.serviceName = opts.getServiceName();
+    this.serviceFqdn = opts.getServiceFQDN();
 
     try {
-      loginContext = new LoginContext("client", new TextCallbackHandler());
+      loginContext =
+          new LoginContext(
+              "pegasus-client", new Subject(), new TextCallbackHandler(), getConfiguration(opts));
       loginContext.login();
 
       subject = loginContext.getSubject();
@@ -52,5 +55,28 @@ public class SecurityReplicaSessionHook implements ReplicaSessionHook {
 
   private boolean isNegotiationRequest(final ReplicaSession.RequestEntry entry) {
     return entry.op.getClass().equals(negotiation_operator.class);
+  }
+
+  private Configuration getConfiguration(ClientOptions clientOptions) {
+    return new Configuration() {
+      @Override
+      public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
+        Map<String, String> options = new HashMap<>();
+        options.put("useTicketCache", "true");
+        options.put("renewTGT", "true");
+        options.put("useKeyTab", "true");
+        options.put("renewTGT", "true");
+        options.put("storeKey", "true");
+        options.put("keyTab", clientOptions.getKeyTab());
+        options.put("principal", clientOptions.getPrincipal());
+
+        return new AppConfigurationEntry[] {
+          new AppConfigurationEntry(
+              "com.sun.security.auth.module.Krb5LoginModule",
+              AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
+              options)
+        };
+      }
+    };
   }
 }

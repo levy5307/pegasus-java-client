@@ -49,6 +49,8 @@ public class ClientOptions {
   public static final String PEGASUS_SERVICE_NAME_KEY = "service_name";
   public static final String PEGASUS_SERVICE_FQDN_KEY = "service_fqdn";
   public static final String PEGASUS_JAAS_CONF_KEY = "jaas_conf";
+  public static final String PEGASUS_KEYTAB_KEY = "keyTab";
+  public static final String PEGASUS_PRINCIPAL_KEY = "principal";
 
   public static final String DEFAULT_META_SERVERS =
       "127.0.0.1:34601,127.0.0.1:34602,127.0.0.1:34603";
@@ -63,6 +65,8 @@ public class ClientOptions {
   public static final String DEFAULT_SERVICE_NAME = "";
   public static final String DEFAULT_SERVICE_FQDN = "";
   public static final String DEFAULT_JAAS_CONF = "configuration/pegasus_jaas.conf";
+  public static final String DEFAULT_KEYTAB = "";
+  public static final String DEFAULT_PRINCIPAL = "";
 
   private final String metaServers;
   private final Duration operationTimeout;
@@ -76,6 +80,8 @@ public class ClientOptions {
   private final String serviceName;
   private final String serviceFQDN;
   private final String jaasConf;
+  private final String keyTab;
+  private final String principal;
 
   protected ClientOptions(Builder builder) {
     this.metaServers = builder.metaServers;
@@ -90,6 +96,8 @@ public class ClientOptions {
     this.serviceName = builder.serviceName;
     this.serviceFQDN = builder.serviceFQDN;
     this.jaasConf = builder.jaasConf;
+    this.keyTab = builder.keyTab;
+    this.principal = builder.principal;
   }
 
   protected ClientOptions(ClientOptions original) {
@@ -105,6 +113,8 @@ public class ClientOptions {
     this.serviceName = original.getServiceName();
     this.serviceFQDN = original.getServiceFQDN();
     this.jaasConf = original.getJaasConf();
+    this.keyTab = original.getKeyTab();
+    this.principal = original.getPrincipal();
   }
 
   /**
@@ -168,6 +178,8 @@ public class ClientOptions {
     String serviceName = config.getString(PEGASUS_SERVICE_NAME_KEY, DEFAULT_SERVICE_NAME);
     String serviceFQDN = config.getString(PEGASUS_SERVICE_FQDN_KEY, DEFAULT_SERVICE_FQDN);
     String jaasConf = config.getString(PEGASUS_JAAS_CONF_KEY, DEFAULT_JAAS_CONF);
+    String keyTab = config.getString(PEGASUS_KEYTAB_KEY, DEFAULT_KEYTAB);
+    String principal = config.getString(PEGASUS_PRINCIPAL_KEY, DEFAULT_PRINCIPAL);
 
     return ClientOptions.builder()
         .metaServers(metaList)
@@ -181,6 +193,8 @@ public class ClientOptions {
         .serviceName(serviceName)
         .serviceFQDN(serviceFQDN)
         .jaasConf(jaasConf)
+        .keyTab(keyTab)
+        .principal(principal)
         .build();
   }
 
@@ -202,7 +216,9 @@ public class ClientOptions {
           && this.enableAuth == clientOptions.enableAuth
           && this.serviceName == clientOptions.serviceName
           && this.serviceFQDN == clientOptions.serviceFQDN
-          && this.jaasConf == clientOptions.jaasConf;
+          && this.jaasConf == clientOptions.jaasConf
+          && this.keyTab == clientOptions.keyTab
+          && this.principal == clientOptions.principal;
     }
     return false;
   }
@@ -236,6 +252,10 @@ public class ClientOptions {
         + serviceFQDN
         + ", jaasConf="
         + jaasConf
+        + ", keyTab="
+        + keyTab
+        + ", principal="
+        + principal
         + '}';
   }
 
@@ -253,6 +273,8 @@ public class ClientOptions {
     private String serviceName = DEFAULT_SERVICE_NAME;
     private String serviceFQDN = DEFAULT_SERVICE_FQDN;
     private String jaasConf = DEFAULT_JAAS_CONF;
+    private String keyTab = DEFAULT_KEYTAB;
+    private String principal = DEFAULT_PRINCIPAL;
 
     protected Builder() {}
 
@@ -401,6 +423,16 @@ public class ClientOptions {
       return this;
     }
 
+    public Builder keyTab(String keyTab) {
+      this.keyTab = keyTab;
+      return this;
+    }
+
+    public Builder principal(String principal) {
+      this.principal = principal;
+      return this;
+    }
+
     /**
      * Create a new instance of {@link ClientOptions}.
      *
@@ -432,7 +464,9 @@ public class ClientOptions {
         .enableAuth(isEnableAuth())
         .serviceName(getServiceName())
         .serviceFQDN(getServiceFQDN())
-        .jaasConf(getJaasConf());
+        .jaasConf(getJaasConf())
+        .keyTab(getKeyTab())
+        .principal(getPrincipal());
     return builder;
   }
 
@@ -548,5 +582,13 @@ public class ClientOptions {
    */
   public String getJaasConf() {
     return jaasConf;
+  }
+
+  public String getPrincipal() {
+    return principal;
+  }
+
+  public String getKeyTab() {
+    return keyTab;
   }
 }
